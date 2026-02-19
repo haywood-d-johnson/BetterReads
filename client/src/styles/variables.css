@@ -1,0 +1,86 @@
+:root {
+  /* Colors */
+  --color-primary: #4a90a4;
+  --color-primary-dark: #3a7a8e;
+  --color-primary-light: #6bb0c4;
+  --color-accent: #e8a838;
+  --color-accent-dark: #d09428;
+
+  --color-bg: #f5f1eb;
+  --color-bg-card: #ffffff;
+  --color-bg-sidebar: #2c2c2c;
+  --color-bg-header: #1a1a2e;
+  --color-bg-input: #fafafa;
+
+  --color-text: #2c2c2c;
+  --color-text-light: #666666;
+  --color-text-muted: #999999;
+  --color-text-inverse: #f5f1eb;
+
+  --color-border: #e0dcd4;
+  --color-border-light: #eeebe5;
+
+  --color-success: #4caf50;
+  --color-warning: #ff9800;
+  --color-danger: #e74c3c;
+  --color-info: #2196f3;
+
+  --color-star: #f4c430;
+  --color-star-empty: #d4d0c8;
+
+  --color-progress: #4caf50;
+  --color-progress-bg: #e0dcd4;
+
+  /* Extended colors (overridden by themes.css) */
+  --color-focus-ring: rgba(74, 144, 164, 0.15);
+  --color-login-gradient: linear-gradient(135deg, #1a1a2e, #16213e, #0f3460);
+  --color-sidebar-active: rgba(74, 144, 164, 0.1);
+  --color-chart-grid: #e0dcd4;
+  --color-chart-bar: #4a90a4;
+  --color-progress-end: #81c784;
+  --color-cover-gradient: linear-gradient(135deg, #667eea, #764ba2);
+  --color-danger-dark: #c0392b;
+  --color-badge-primary-bg: rgba(74, 144, 164, 0.15);
+  --color-badge-accent-bg: rgba(232, 168, 56, 0.15);
+  --color-badge-success-bg: rgba(76, 175, 80, 0.15);
+  --color-header-border: rgba(255, 255, 255, 0.3);
+
+  /* Spacing */
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 16px;
+  --space-lg: 24px;
+  --space-xl: 32px;
+  --space-2xl: 48px;
+
+  /* Typography */
+  --font-family: "Reenie Beanie", cursive;
+  --font-family-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-size-xs: 0.75rem;
+  --font-size-sm: 0.875rem;
+  --font-size-base: 1rem;
+  --font-size-md: 1rem;
+  --font-size-lg: 1.125rem;
+  --font-size-xl: 1.5rem;
+  --font-size-2xl: 2rem;
+
+  /* Layout */
+  --sidebar-width: 240px;
+  --header-height: 60px;
+  --max-content-width: 1200px;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.08);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.12);
+
+  /* Borders */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-full: 9999px;
+
+  /* Transitions */
+  --transition-fast: 150ms ease;
+  --transition-normal: 250ms ease;
+}

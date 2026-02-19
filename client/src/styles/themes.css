@@ -1,0 +1,213 @@
+/* ========================================
+   BetterReads – Light / Dark Theme System
+   ======================================== */
+
+/* Smooth theme transition */
+html {
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* ── Light Theme (Botanical Sage) ── */
+[data-theme="light"] {
+  --color-primary: #6b8f71;
+  --color-primary-dark: #567a5c;
+  --color-primary-light: #8fb596;
+  --color-accent: #d4a24e;
+  --color-accent-dark: #b8892f;
+
+  --color-bg: #dce4d0;
+  --color-bg-card: #ffffff;
+  --color-bg-sidebar: #2c2c2c;
+  --color-bg-header: #3a5a40;
+  --color-bg-input: #faf8f4;
+
+  --color-text: #2c3e2d;
+  --color-text-light: #5a6b5c;
+  --color-text-muted: #8a9a8c;
+  --color-text-inverse: #f5f0e8;
+
+  --color-border: #d4cfb8;
+  --color-border-light: #e8e4d4;
+
+  --color-success: #5a8f5c;
+  --color-warning: #d4a24e;
+  --color-danger: #c45c4a;
+  --color-info: #5b8fb8;
+
+  --color-star: #d4a24e;
+  --color-star-empty: #d4cfb8;
+
+  --color-progress: #6b8f71;
+  --color-progress-bg: #d4cfb8;
+
+  /* New variables for previously hardcoded values */
+  --color-focus-ring: rgba(107, 143, 113, 0.2);
+  --color-login-gradient: linear-gradient(135deg, #3a5a40, #4a7856, #6b8f71);
+  --color-sidebar-active: rgba(107, 143, 113, 0.12);
+  --color-chart-grid: #d4cfb8;
+  --color-chart-bar: #6b8f71;
+  --color-progress-end: #8fb596;
+  --color-cover-gradient: linear-gradient(135deg, #6b8f71, #4a7856);
+  --color-danger-dark: #a34436;
+  --color-badge-primary-bg: rgba(107, 143, 113, 0.15);
+  --color-badge-accent-bg: rgba(212, 162, 78, 0.15);
+  --color-badge-success-bg: rgba(90, 143, 92, 0.15);
+  --color-header-border: rgba(255, 255, 255, 0.3);
+
+  /* Shadows */
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.08);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+/* ── Dark Theme (Deep Green) ── */
+[data-theme="dark"] {
+  --color-primary: #8fb596;
+  --color-primary-dark: #a8ccb0;
+  --color-primary-light: #6b8f71;
+  --color-accent: #e8b84e;
+  --color-accent-dark: #f0cc78;
+
+  --color-bg: #1a2e1a;
+  --color-bg-card: #243524;
+  --color-bg-sidebar: #1a2e1a;
+  --color-bg-header: #1a2e1a;
+  --color-bg-input: #2c3e2c;
+
+  --color-text: #e8e4d4;
+  --color-text-light: #b8c4b0;
+  --color-text-muted: #7a8a70;
+  --color-text-inverse: #e8e4d4;
+
+  --color-border: #3a5a3a;
+  --color-border-light: #2e482e;
+
+  --color-success: #8fb596;
+  --color-warning: #e8b84e;
+  --color-danger: #e07060;
+  --color-info: #78b8e0;
+
+  --color-star: #e8b84e;
+  --color-star-empty: #3a5a3a;
+
+  --color-progress: #8fb596;
+  --color-progress-bg: #3a5a3a;
+
+  /* New variables for previously hardcoded values */
+  --color-focus-ring: rgba(143, 181, 150, 0.25);
+  --color-login-gradient: linear-gradient(135deg, #0e1e0e, #1a2e1a, #243524);
+  --color-sidebar-active: rgba(143, 181, 150, 0.15);
+  --color-chart-grid: #3a5a3a;
+  --color-chart-bar: #8fb596;
+  --color-progress-end: #a8ccb0;
+  --color-cover-gradient: linear-gradient(135deg, #3a5a40, #2a4a30);
+  --color-danger-dark: #c45040;
+  --color-badge-primary-bg: rgba(143, 181, 150, 0.15);
+  --color-badge-accent-bg: rgba(232, 184, 78, 0.15);
+  --color-badge-success-bg: rgba(143, 181, 150, 0.15);
+  --color-header-border: rgba(255, 255, 255, 0.15);
+
+  /* Shadows – slightly more visible on dark bg */
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.25);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+/* ── Floral Modal Background ── */
+.modal-floral-bg {
+  position: relative;
+  overflow: hidden;
+}
+
+.modal-floral-bg::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: url("../assets/floral.jpg");
+  background-size: cover;
+  background-position: center;
+  opacity: 0.08;
+  pointer-events: none;
+  border-radius: inherit;
+  z-index: 0;
+}
+
+[data-theme="dark"] .modal-floral-bg::before {
+  opacity: 0.05;
+}
+
+/* Ensure modal content sits above the ::before */
+.modal-floral-bg > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* ── Floral Nav / Chrome Background ── */
+.nav-floral-bg {
+  position: relative;
+  overflow: hidden;
+}
+
+.nav-floral-bg::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: url("../assets/floral.jpg");
+  background-size: cover;
+  background-position: center;
+  opacity: 1;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Ensure nav content sits above the floral */
+.nav-floral-bg > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Solid pill backgrounds for header items over floral */
+.nav-floral-bg .btn,
+.nav-floral-bg a {
+  background-color: #1a2e1a;
+  border-radius: var(--radius-md);
+  padding: 4px 10px;
+}
+
+[data-theme="light"] .nav-floral-bg .btn,
+[data-theme="light"] .nav-floral-bg a {
+  background-color: #3a5a40;
+}
+
+/* Sidebar links over floral — solid pill */
+.nav-floral-bg nav a {
+  background-color: #ffffff;
+}
+
+[data-theme="dark"] .nav-floral-bg nav a {
+  background-color: #1a2e1a;
+}
+
+/* Sidebar heading label */
+.nav-floral-bg h3 {
+  background-color: #ffffff;
+  border-radius: var(--radius-md);
+  padding: 2px 8px;
+  display: inline-block;
+}
+
+[data-theme="dark"] .nav-floral-bg h3 {
+  background-color: #1a2e1a;
+}
+
+/* Bottom tab bar items — compact solid pills */
+[data-bottom-tabs].nav-floral-bg a {
+  background-color: #ffffff;
+  border-radius: var(--radius-sm);
+  margin: 6px 2px;
+  padding: 2px 4px;
+}
+
+[data-theme="dark"] [data-bottom-tabs].nav-floral-bg a {
+  background-color: #1a2e1a;
+}

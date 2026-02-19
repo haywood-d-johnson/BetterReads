@@ -1,0 +1,134 @@
+/* ===== Mobile: < 768px ===== */
+@media (max-width: 767px) {
+  /* --- Spacing variable overrides --- */
+  :root {
+    --space-lg: 16px;
+    --space-xl: 24px;
+  }
+
+  /* --- Sidebar: hidden on mobile --- */
+  [data-sidebar] {
+    display: none !important;
+  }
+
+  /* --- Header: hide desktop nav --- */
+  [data-main-nav] {
+    display: none !important;
+  }
+
+  /* --- Header: tighter padding --- */
+  [data-header] {
+    padding: 0 12px !important;
+  }
+
+  [data-header] > div:first-child {
+    gap: 12px !important;
+  }
+
+  /* --- Main content: full width + bottom clearance for tab bar --- */
+  [data-main-content] {
+    padding: 16px !important;
+    padding-bottom: 80px !important;
+  }
+
+  /* --- Detail pages: stack to single column --- */
+  [data-book-detail-layout] {
+    grid-template-columns: 1fr !important;
+    gap: 20px !important;
+  }
+
+  [data-book-detail-layout] > div:first-child {
+    max-width: 200px !important;
+    margin: 0 auto !important;
+  }
+
+  [data-author-layout] {
+    grid-template-columns: 1fr !important;
+    gap: 16px !important;
+  }
+
+  [data-author-layout] > div:first-child {
+    max-width: 150px !important;
+    margin: 0 auto !important;
+  }
+
+  /* --- Stats page: charts single column --- */
+  [data-stats-charts] {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* --- Search result cards: vertical stack --- */
+  [data-search-card] {
+    flex-direction: column !important;
+    gap: 12px !important;
+  }
+
+  [data-search-card] > div:first-child {
+    width: 80px !important;
+    height: 120px !important;
+    flex-shrink: 0 !important;
+  }
+
+  [data-search-card] > div:last-child {
+    align-self: flex-start !important;
+  }
+
+  /* --- Book grid: tighter on mobile --- */
+  [data-book-grid] {
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)) !important;
+    gap: 12px !important;
+  }
+
+  /* --- Stat cards: less padding --- */
+  [data-stat-card] {
+    padding: 16px !important;
+  }
+
+  /* --- Touch targets: minimum 44px --- */
+  .btn {
+    min-height: 44px;
+  }
+
+  .btn-sm {
+    min-height: 36px;
+  }
+
+  /* --- Bottom tab bar --- */
+  [data-bottom-tabs] {
+    position: fixed !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    z-index: 1000 !important;
+  }
+
+  /* --- Location map: reduce height on mobile --- */
+  .leaflet-container {
+    height: 200px !important;
+  }
+
+  /* --- Location picker modal: nearly full-screen on mobile --- */
+  [data-location-picker] {
+    padding: 8px !important;
+  }
+
+  [data-location-picker] > div {
+    max-width: 100% !important;
+    max-height: 100vh !important;
+    border-radius: 8px !important;
+    padding: 16px !important;
+  }
+
+  [data-location-picker] .leaflet-container {
+    height: 250px !important;
+  }
+
+  /* --- Heading sizes --- */
+  h1 {
+    font-size: 1.5rem !important;
+  }
+
+  h2 {
+    font-size: 1.25rem !important;
+  }
+}
