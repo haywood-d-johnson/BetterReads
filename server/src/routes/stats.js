@@ -4,36 +4,36 @@ import * as statsService from "../services/statsService.js";
 
 const router = Router();
 
-router.get("/overview", authenticate, (req, res) => {
+router.get("/overview", authenticate, async (req, res) => {
   try {
-    res.json(statsService.getOverview(req.query.reader));
+    res.json(await statsService.getOverview(req.query.reader));
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Failed to fetch stats" });
   }
 });
 
-router.get("/by-year", authenticate, (req, res) => {
+router.get("/by-year", authenticate, async (req, res) => {
   try {
-    res.json(statsService.getByYear(req.query.year || new Date().getFullYear(), req.query.reader));
+    res.json(await statsService.getByYear(req.query.year || new Date().getFullYear(), req.query.reader));
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Failed to fetch yearly stats" });
   }
 });
 
-router.get("/genres", authenticate, (req, res) => {
+router.get("/genres", authenticate, async (req, res) => {
   try {
-    res.json(statsService.getGenres(req.query.reader));
+    res.json(await statsService.getGenres(req.query.reader));
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Failed to fetch genre stats" });
   }
 });
 
-router.get("/ratings", authenticate, (req, res) => {
+router.get("/ratings", authenticate, async (req, res) => {
   try {
-    res.json(statsService.getRatings(req.query.reader));
+    res.json(await statsService.getRatings(req.query.reader));
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Failed to fetch rating stats" });

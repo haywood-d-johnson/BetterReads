@@ -1,4 +1,4 @@
-import bcrypt from "bcrypt";
+import bcrypt from "bcryptjs";
 import db from "./connection.js";
 import { migrate } from "./migrate.js";
 import config from "../config.js";
@@ -14,30 +14,30 @@ const DEFAULT_SHELVES = [
 
 export async function seed() {
   // Run migrations first to ensure tables exist
-  migrate();
+  await migrate();
 
   // Seed user (only if no users exist)
-  const existingUser = db.prepare("SELECT id FROM user LIMIT 1").get();
-  if (!existingUser) {
+  const existingUser = await db.execute("SELECT id FROM user LIMIT 1");
+  if (existingUser.rows.length === 0) {
     const hash = await bcrypt.hash(config.ADMIN_PASSWORD, SALT_ROUNDS);
-    db.prepare("INSERT INTO user (username, password_hash) VALUES (?, ?)").run(config.ADMIN_USERNAME, hash);
+    await db.execute({
+      sql: "INSERT INTO user (username, password_hash) VALUES (?, ?)",
+      args: [config.ADMIN_USERNAME, hash],
+    });
     console.log(`Admin user "${config.ADMIN_USERNAME}" created.`);
   } else {
     console.log("User already exists, skipping user seed.");
   }
 
   // Seed default shelves (only if no shelves exist)
-  const existingShelf = db.prepare("SELECT id FROM shelf LIMIT 1").get();
-  if (!existingShelf) {
-    const insertShelf = db.prepare("INSERT INTO shelf (name, slug, is_default, sort_order) VALUES (?, ?, 1, ?)");
-
-    const seedShelves = db.transaction(() => {
-      for (const shelf of DEFAULT_SHELVES) {
-        insertShelf.run(shelf.name, shelf.slug, shelf.sort_order);
-      }
-    });
-
-    seedShelves();
+  const existingShelf = await db.execute("SELECT id FROM shelf LIMIT 1");
+  if (existingShelf.rows.length === 0) {
+    await db.batch(
+      DEFAULT_SHELVES.map((shelf) => ({
+        sql: "INSERT INTO shelf (name, slug, is_default, sort_order) VALUES (?, ?, 1, ?)",
+        args: [shelf.name, shelf.slug, shelf.sort_order],
+      })),
+    );
     console.log("Default shelves created.");
   } else {
     console.log("Shelves already exist, skipping shelf seed.");
