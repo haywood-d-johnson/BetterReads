@@ -1,6 +1,6 @@
 import db from "../db/connection.js";
 
-export function getBooks({ shelfSlug, reader, sort = "date_added", order = "desc", page = 1, limit = 20 }) {
+export async function getBooks({ shelfSlug, reader, sort = "date_added", order = "desc", page = 1, limit = 20 }) {
   let query = "SELECT b.*, s.name as shelf_name, s.slug as shelf_slug FROM book b JOIN shelf s ON b.shelf_id = s.id";
   const conditions = [];
   const params = [];
@@ -17,7 +17,8 @@ export function getBooks({ shelfSlug, reader, sort = "date_added", order = "desc
     "SELECT b.*, s.name as shelf_name, s.slug as shelf_slug",
     "SELECT COUNT(*) as total",
   );
-  const { total } = db.prepare(countQuery).get(...params);
+  const countResult = await db.execute({ sql: countQuery, args: params });
+  const total = countResult.rows[0].total;
   const sortMap = {
     date_added: "b.date_added",
     title: "b.title",
@@ -29,32 +30,31 @@ export function getBooks({ shelfSlug, reader, sort = "date_added", order = "desc
   query += ` ORDER BY ${sortMap[sort] || "b.date_added"} ${order === "asc" ? "ASC" : "DESC"}`;
   const offset = (page - 1) * limit;
   query += " LIMIT ? OFFSET ?";
-  params.push(limit, offset);
-  return { books: db.prepare(query).all(...params), total, page, limit, totalPages: Math.ceil(total / limit) };
+  const allParams = [...params, limit, offset];
+  const booksResult = await db.execute({ sql: query, args: allParams });
+  return { books: booksResult.rows, total, page, limit, totalPages: Math.ceil(total / limit) };
 }
 
-export function getBook(id) {
-  return db
-    .prepare(
-      "SELECT b.*, s.name as shelf_name, s.slug as shelf_slug FROM book b JOIN shelf s ON b.shelf_id = s.id WHERE b.id = ?",
-    )
-    .get(id);
+export async function getBook(id) {
+  const result = await db.execute({
+    sql: "SELECT b.*, s.name as shelf_name, s.slug as shelf_slug FROM book b JOIN shelf s ON b.shelf_id = s.id WHERE b.id = ?",
+    args: [id],
+  });
+  return result.rows[0] || null;
 }
 
-export function getBookByWorkKey(olWorkKey) {
-  return db
-    .prepare(
-      "SELECT b.*, s.name as shelf_name, s.slug as shelf_slug FROM book b JOIN shelf s ON b.shelf_id = s.id WHERE b.ol_work_key = ?",
-    )
-    .get(olWorkKey);
+export async function getBookByWorkKey(olWorkKey) {
+  const result = await db.execute({
+    sql: "SELECT b.*, s.name as shelf_name, s.slug as shelf_slug FROM book b JOIN shelf s ON b.shelf_id = s.id WHERE b.ol_work_key = ?",
+    args: [olWorkKey],
+  });
+  return result.rows[0] || null;
 }
 
-export function addBook(bookData) {
-  const result = db
-    .prepare(
-      `INSERT INTO book (ol_work_key, ol_edition_key, title, subtitle, author_name, ol_author_key, cover_id, description, number_of_pages, publish_date, publisher, isbn_13, isbn_10, subjects, language, shelf_id, total_pages, reader) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    )
-    .run(
+export async function addBook(bookData) {
+  const result = await db.execute({
+    sql: `INSERT INTO book (ol_work_key, ol_edition_key, title, subtitle, author_name, ol_author_key, cover_id, description, number_of_pages, publish_date, publisher, isbn_13, isbn_10, subjects, language, shelf_id, total_pages, reader) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    args: [
       bookData.ol_work_key || null,
       bookData.ol_edition_key || null,
       bookData.title,
@@ -73,18 +73,27 @@ export function addBook(bookData) {
       bookData.shelf_id,
       bookData.number_of_pages || null,
       bookData.reader || "me",
-    );
-  db.prepare("INSERT INTO book_shelf_history (book_id, from_shelf_id, to_shelf_id) VALUES (?, NULL, ?)").run(
-    result.lastInsertRowid,
-    bookData.shelf_id,
-  );
-  const shelf = db.prepare("SELECT slug FROM shelf WHERE id = ?").get(bookData.shelf_id);
-  if (shelf?.slug === "currently-reading")
-    db.prepare("UPDATE book SET date_started = datetime('now') WHERE id = ?").run(result.lastInsertRowid);
-  return getBook(result.lastInsertRowid);
+    ],
+  });
+  const newId = Number(result.lastInsertRowid);
+  await db.execute({
+    sql: "INSERT INTO book_shelf_history (book_id, from_shelf_id, to_shelf_id) VALUES (?, NULL, ?)",
+    args: [newId, bookData.shelf_id],
+  });
+  const shelf = await db.execute({
+    sql: "SELECT slug FROM shelf WHERE id = ?",
+    args: [bookData.shelf_id],
+  });
+  if (shelf.rows[0]?.slug === "currently-reading") {
+    await db.execute({
+      sql: "UPDATE book SET date_started = datetime('now') WHERE id = ?",
+      args: [newId],
+    });
+  }
+  return getBook(newId);
 }
 
-export function updateBook(id, updates) {
+export async function updateBook(id, updates) {
   const fields = ["title", "subtitle", "description", "total_pages"];
   const sets = [];
   const params = [];
@@ -97,78 +106,114 @@ export function updateBook(id, updates) {
   if (sets.length === 0) return getBook(id);
   sets.push("updated_at = datetime('now')");
   params.push(id);
-  db.prepare(`UPDATE book SET ${sets.join(", ")} WHERE id = ?`).run(...params);
+  await db.execute({
+    sql: `UPDATE book SET ${sets.join(", ")} WHERE id = ?`,
+    args: params,
+  });
   return getBook(id);
 }
 
-export function deleteBook(id) {
-  db.prepare("DELETE FROM book WHERE id = ?").run(id);
+export async function deleteBook(id) {
+  await db.execute({ sql: "DELETE FROM book WHERE id = ?", args: [id] });
 }
 
-export function moveShelf(bookId, newShelfId) {
-  const book = db.prepare("SELECT shelf_id FROM book WHERE id = ?").get(bookId);
+export async function moveShelf(bookId, newShelfId) {
+  const bookResult = await db.execute({
+    sql: "SELECT shelf_id FROM book WHERE id = ?",
+    args: [bookId],
+  });
+  const book = bookResult.rows[0];
   if (!book) return null;
   if (book.shelf_id === newShelfId) return getBook(bookId);
-  const newShelf = db.prepare("SELECT slug FROM shelf WHERE id = ?").get(newShelfId);
+  const shelfResult = await db.execute({
+    sql: "SELECT slug FROM shelf WHERE id = ?",
+    args: [newShelfId],
+  });
+  const newShelf = shelfResult.rows[0];
   const updates = ["shelf_id = ?", "updated_at = datetime('now')"];
   const params = [newShelfId];
   if (newShelf.slug === "currently-reading") updates.push("date_started = COALESCE(date_started, datetime('now'))");
   else if (newShelf.slug === "finished") updates.push("date_finished = datetime('now')");
   params.push(bookId);
-  db.prepare(`UPDATE book SET ${updates.join(", ")} WHERE id = ?`).run(...params);
-  db.prepare("INSERT INTO book_shelf_history (book_id, from_shelf_id, to_shelf_id) VALUES (?, ?, ?)").run(
-    bookId,
-    book.shelf_id,
-    newShelfId,
-  );
+  await db.execute({
+    sql: `UPDATE book SET ${updates.join(", ")} WHERE id = ?`,
+    args: params,
+  });
+  await db.execute({
+    sql: "INSERT INTO book_shelf_history (book_id, from_shelf_id, to_shelf_id) VALUES (?, ?, ?)",
+    args: [bookId, book.shelf_id, newShelfId],
+  });
   return getBook(bookId);
 }
 
-export function updateProgress(bookId, currentPage) {
-  const book = db.prepare("SELECT total_pages FROM book WHERE id = ?").get(bookId);
+export async function updateProgress(bookId, currentPage) {
+  const bookResult = await db.execute({
+    sql: "SELECT total_pages FROM book WHERE id = ?",
+    args: [bookId],
+  });
+  const book = bookResult.rows[0];
   if (!book) return null;
   const pct = book.total_pages ? Math.round((currentPage / book.total_pages) * 1000) / 10 : null;
-  db.prepare("UPDATE book SET current_page = ?, updated_at = datetime('now') WHERE id = ?").run(currentPage, bookId);
-  db.prepare("INSERT INTO reading_progress (book_id, page, percentage) VALUES (?, ?, ?)").run(bookId, currentPage, pct);
+  await db.execute({
+    sql: "UPDATE book SET current_page = ?, updated_at = datetime('now') WHERE id = ?",
+    args: [currentPage, bookId],
+  });
+  await db.execute({
+    sql: "INSERT INTO reading_progress (book_id, page, percentage) VALUES (?, ?, ?)",
+    args: [bookId, currentPage, pct],
+  });
   return getBook(bookId);
 }
 
-export function updateRating(bookId, rating) {
-  db.prepare("UPDATE book SET rating = ?, updated_at = datetime('now') WHERE id = ?").run(rating, bookId);
+export async function updateRating(bookId, rating) {
+  await db.execute({
+    sql: "UPDATE book SET rating = ?, updated_at = datetime('now') WHERE id = ?",
+    args: [rating, bookId],
+  });
   return getBook(bookId);
 }
 
-export function updateReview(bookId, review) {
-  db.prepare("UPDATE book SET review = ?, updated_at = datetime('now') WHERE id = ?").run(review, bookId);
+export async function updateReview(bookId, review) {
+  await db.execute({
+    sql: "UPDATE book SET review = ?, updated_at = datetime('now') WHERE id = ?",
+    args: [review, bookId],
+  });
   return getBook(bookId);
 }
 
-export function updateReader(bookId, reader) {
-  db.prepare("UPDATE book SET reader = ?, updated_at = datetime('now') WHERE id = ?").run(reader, bookId);
+export async function updateReader(bookId, reader) {
+  await db.execute({
+    sql: "UPDATE book SET reader = ?, updated_at = datetime('now') WHERE id = ?",
+    args: [reader, bookId],
+  });
   return getBook(bookId);
 }
 
-export function updateLocation(bookId, locationName, locationLat, locationLng) {
-  db.prepare(
-    "UPDATE book SET location_name = ?, location_lat = ?, location_lng = ?, updated_at = datetime('now') WHERE id = ?",
-  ).run(locationName, locationLat, locationLng, bookId);
+export async function updateLocation(bookId, locationName, locationLat, locationLng) {
+  await db.execute({
+    sql: "UPDATE book SET location_name = ?, location_lat = ?, location_lng = ?, updated_at = datetime('now') WHERE id = ?",
+    args: [locationName, locationLat, locationLng, bookId],
+  });
   return getBook(bookId);
 }
 
-export function removeLocation(bookId) {
-  db.prepare(
-    "UPDATE book SET location_name = NULL, location_lat = NULL, location_lng = NULL, updated_at = datetime('now') WHERE id = ?",
-  ).run(bookId);
+export async function removeLocation(bookId) {
+  await db.execute({
+    sql: "UPDATE book SET location_name = NULL, location_lat = NULL, location_lng = NULL, updated_at = datetime('now') WHERE id = ?",
+    args: [bookId],
+  });
   return getBook(bookId);
 }
 
-export function getProgressHistory(bookId) {
-  return db.prepare("SELECT * FROM reading_progress WHERE book_id = ? ORDER BY recorded_at ASC").all(bookId);
+export async function getProgressHistory(bookId) {
+  const result = await db.execute({
+    sql: "SELECT * FROM reading_progress WHERE book_id = ? ORDER BY recorded_at ASC",
+    args: [bookId],
+  });
+  return result.rows;
 }
 
-export function getLibraryWorkKeys() {
-  return db
-    .prepare("SELECT ol_work_key FROM book WHERE ol_work_key IS NOT NULL")
-    .all()
-    .map((r) => r.ol_work_key);
+export async function getLibraryWorkKeys() {
+  const result = await db.execute("SELECT ol_work_key FROM book WHERE ol_work_key IS NOT NULL");
+  return result.rows.map((r) => r.ol_work_key);
 }

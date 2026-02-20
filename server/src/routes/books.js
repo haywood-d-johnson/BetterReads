@@ -5,19 +5,19 @@ import * as openLibrary from "../services/openLibrary.js";
 
 const router = Router();
 
-router.get("/", authenticate, (req, res) => {
+router.get("/", authenticate, async (req, res) => {
   try {
     const { shelf, sort, order, page = 1, limit = 20, reader } = req.query;
-    res.json(bookService.getBooks({ shelfSlug: shelf, reader, sort, order, page: Number(page), limit: Number(limit) }));
+    res.json(await bookService.getBooks({ shelfSlug: shelf, reader, sort, order, page: Number(page), limit: Number(limit) }));
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Failed to fetch books" });
   }
 });
 
-router.get("/library-keys", authenticate, (req, res) => {
+router.get("/library-keys", authenticate, async (req, res) => {
   try {
-    res.json({ keys: bookService.getLibraryWorkKeys() });
+    res.json({ keys: await bookService.getLibraryWorkKeys() });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Failed to fetch library keys" });
@@ -27,7 +27,7 @@ router.get("/library-keys", authenticate, (req, res) => {
 router.get("/ol/:olWorkKey", authenticate, async (req, res) => {
   try {
     const olWorkKey = `/works/${req.params.olWorkKey}`;
-    const localBook = bookService.getBookByWorkKey(olWorkKey);
+    const localBook = await bookService.getBookByWorkKey(olWorkKey);
     const work = await openLibrary.getWork(olWorkKey);
     const description = typeof work.description === "string" ? work.description : work.description?.value || null;
     const coverId = work.covers?.[0] || null;
@@ -59,9 +59,9 @@ router.get("/ol/:olWorkKey", authenticate, async (req, res) => {
   }
 });
 
-router.get("/:id", authenticate, (req, res) => {
+router.get("/:id", authenticate, async (req, res) => {
   try {
-    const book = bookService.getBook(Number(req.params.id));
+    const book = await bookService.getBook(Number(req.params.id));
     if (!book) return res.status(404).json({ error: "Book not found" });
     res.json(book);
   } catch (err) {
@@ -70,18 +70,18 @@ router.get("/:id", authenticate, (req, res) => {
   }
 });
 
-router.post("/", authenticate, (req, res) => {
+router.post("/", authenticate, async (req, res) => {
   try {
-    res.status(201).json(bookService.addBook(req.body));
+    res.status(201).json(await bookService.addBook(req.body));
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Failed to add book" });
   }
 });
 
-router.put("/:id", authenticate, (req, res) => {
+router.put("/:id", authenticate, async (req, res) => {
   try {
-    const book = bookService.updateBook(Number(req.params.id), req.body);
+    const book = await bookService.updateBook(Number(req.params.id), req.body);
     if (!book) return res.status(404).json({ error: "Book not found" });
     res.json(book);
   } catch (err) {
@@ -90,9 +90,9 @@ router.put("/:id", authenticate, (req, res) => {
   }
 });
 
-router.delete("/:id", authenticate, (req, res) => {
+router.delete("/:id", authenticate, async (req, res) => {
   try {
-    bookService.deleteBook(Number(req.params.id));
+    await bookService.deleteBook(Number(req.params.id));
     res.json({ success: true });
   } catch (err) {
     console.error(err);
@@ -100,9 +100,9 @@ router.delete("/:id", authenticate, (req, res) => {
   }
 });
 
-router.put("/:id/shelf", authenticate, (req, res) => {
+router.put("/:id/shelf", authenticate, async (req, res) => {
   try {
-    const book = bookService.moveShelf(Number(req.params.id), req.body.shelfId);
+    const book = await bookService.moveShelf(Number(req.params.id), req.body.shelfId);
     if (!book) return res.status(404).json({ error: "Book not found" });
     res.json(book);
   } catch (err) {
@@ -111,9 +111,9 @@ router.put("/:id/shelf", authenticate, (req, res) => {
   }
 });
 
-router.put("/:id/progress", authenticate, (req, res) => {
+router.put("/:id/progress", authenticate, async (req, res) => {
   try {
-    const book = bookService.updateProgress(Number(req.params.id), req.body.currentPage);
+    const book = await bookService.updateProgress(Number(req.params.id), req.body.currentPage);
     if (!book) return res.status(404).json({ error: "Book not found" });
     res.json(book);
   } catch (err) {
@@ -122,9 +122,9 @@ router.put("/:id/progress", authenticate, (req, res) => {
   }
 });
 
-router.put("/:id/rating", authenticate, (req, res) => {
+router.put("/:id/rating", authenticate, async (req, res) => {
   try {
-    const book = bookService.updateRating(Number(req.params.id), req.body.rating);
+    const book = await bookService.updateRating(Number(req.params.id), req.body.rating);
     if (!book) return res.status(404).json({ error: "Book not found" });
     res.json(book);
   } catch (err) {
@@ -133,9 +133,9 @@ router.put("/:id/rating", authenticate, (req, res) => {
   }
 });
 
-router.put("/:id/review", authenticate, (req, res) => {
+router.put("/:id/review", authenticate, async (req, res) => {
   try {
-    const book = bookService.updateReview(Number(req.params.id), req.body.review);
+    const book = await bookService.updateReview(Number(req.params.id), req.body.review);
     if (!book) return res.status(404).json({ error: "Book not found" });
     res.json(book);
   } catch (err) {
@@ -144,13 +144,13 @@ router.put("/:id/review", authenticate, (req, res) => {
   }
 });
 
-router.put("/:id/reader", authenticate, (req, res) => {
+router.put("/:id/reader", authenticate, async (req, res) => {
   try {
     const { reader } = req.body;
     if (reader !== "me" && reader !== "kids") {
       return res.status(400).json({ error: "reader must be 'me' or 'kids'" });
     }
-    const book = bookService.updateReader(Number(req.params.id), reader);
+    const book = await bookService.updateReader(Number(req.params.id), reader);
     if (!book) return res.status(404).json({ error: "Book not found" });
     res.json(book);
   } catch (err) {
@@ -159,13 +159,13 @@ router.put("/:id/reader", authenticate, (req, res) => {
   }
 });
 
-router.put("/:id/location", authenticate, (req, res) => {
+router.put("/:id/location", authenticate, async (req, res) => {
   try {
     const { locationName, locationLat, locationLng } = req.body;
     if (!locationName || locationLat == null || locationLng == null) {
       return res.status(400).json({ error: "locationName, locationLat, and locationLng are required" });
     }
-    const book = bookService.updateLocation(Number(req.params.id), locationName, Number(locationLat), Number(locationLng));
+    const book = await bookService.updateLocation(Number(req.params.id), locationName, Number(locationLat), Number(locationLng));
     if (!book) return res.status(404).json({ error: "Book not found" });
     res.json(book);
   } catch (err) {
@@ -174,9 +174,9 @@ router.put("/:id/location", authenticate, (req, res) => {
   }
 });
 
-router.delete("/:id/location", authenticate, (req, res) => {
+router.delete("/:id/location", authenticate, async (req, res) => {
   try {
-    const book = bookService.removeLocation(Number(req.params.id));
+    const book = await bookService.removeLocation(Number(req.params.id));
     if (!book) return res.status(404).json({ error: "Book not found" });
     res.json(book);
   } catch (err) {
@@ -185,9 +185,9 @@ router.delete("/:id/location", authenticate, (req, res) => {
   }
 });
 
-router.get("/:id/progress-history", authenticate, (req, res) => {
+router.get("/:id/progress-history", authenticate, async (req, res) => {
   try {
-    res.json(bookService.getProgressHistory(Number(req.params.id)));
+    res.json(await bookService.getProgressHistory(Number(req.params.id)));
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Failed to fetch progress history" });

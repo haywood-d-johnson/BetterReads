@@ -1,5 +1,5 @@
 import { Router } from "express";
-import bcrypt from "bcrypt";
+import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import db from "../db/connection.js";
 import config from "../config.js";
@@ -17,7 +17,11 @@ router.post("/login", async (req, res) => {
     }
 
     // Find user by username
-    const user = db.prepare("SELECT id, username, password_hash FROM user WHERE username = ?").get(username);
+    const result = await db.execute({
+      sql: "SELECT id, username, password_hash FROM user WHERE username = ?",
+      args: [username],
+    });
+    const user = result.rows[0];
 
     if (!user) {
       return res.status(401).json({ error: "Invalid credentials" });
@@ -47,8 +51,12 @@ router.post("/login", async (req, res) => {
 });
 
 // GET /api/auth/me — validate token and return user info
-router.get("/me", authenticate, (req, res) => {
-  const user = db.prepare("SELECT id, username, created_at FROM user WHERE id = ?").get(req.userId);
+router.get("/me", authenticate, async (req, res) => {
+  const result = await db.execute({
+    sql: "SELECT id, username, created_at FROM user WHERE id = ?",
+    args: [req.userId],
+  });
+  const user = result.rows[0];
 
   if (!user) {
     return res.status(404).json({ error: "User not found" });

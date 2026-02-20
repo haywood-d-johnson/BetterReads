@@ -6,7 +6,7 @@ import db from "./connection.js";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-function applyAlterMigrations() {
+async function applyAlterMigrations() {
   const alterStatements = [
     "ALTER TABLE book ADD COLUMN location_name TEXT",
     "ALTER TABLE book ADD COLUMN location_lat REAL",
@@ -16,7 +16,7 @@ function applyAlterMigrations() {
 
   for (const sql of alterStatements) {
     try {
-      db.exec(sql);
+      await db.execute(sql);
     } catch (err) {
       // Column already exists — safe to ignore
       if (!err.message.includes("duplicate column name")) {
@@ -26,29 +26,33 @@ function applyAlterMigrations() {
   }
 }
 
-export function migrate() {
+export async function migrate() {
   const schemaPath = path.join(__dirname, "schema.sql");
   const schema = fs.readFileSync(schemaPath, "utf-8");
 
-  // Execute all CREATE TABLE statements
-  db.exec(schema);
+  // Split schema into individual statements and execute as a batch
+  const statements = schema
+    .split(";")
+    .map((s) => s.trim())
+    .filter((s) => s.length > 0 && !s.startsWith("--"));
+
+  await db.batch(statements.map((sql) => ({ sql: sql + ";" })));
 
   // Apply column additions for existing databases
-  applyAlterMigrations();
+  await applyAlterMigrations();
 
   // Rename "Abandoned" shelf to "Did Not Finish"
-  applyShelfRenames();
+  await applyShelfRenames();
 
   console.log("Database migration complete.");
 }
 
-function applyShelfRenames() {
+async function applyShelfRenames() {
   try {
-    db.prepare("UPDATE shelf SET name = ?, slug = ? WHERE slug = ?").run(
-      "Did Not Finish",
-      "did-not-finish",
-      "abandoned",
-    );
+    await db.execute({
+      sql: "UPDATE shelf SET name = ?, slug = ? WHERE slug = ?",
+      args: ["Did Not Finish", "did-not-finish", "abandoned"],
+    });
   } catch {
     // ignore if shelf doesn't exist
   }

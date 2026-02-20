@@ -4,26 +4,28 @@ import { throttledFetch } from "../middleware/rateLimiter.js";
 
 const TTL = { search: 60, work: 10080, edition: 10080, author: 10080, authorWorks: 1440 };
 
-function getCached(cacheKey) {
-  const row = db
-    .prepare("SELECT response_json FROM ol_cache WHERE cache_key = ? AND expires_at > datetime('now')")
-    .get(cacheKey);
-  return row ? JSON.parse(row.response_json) : null;
+async function getCached(cacheKey) {
+  const result = await db.execute({
+    sql: "SELECT response_json FROM ol_cache WHERE cache_key = ? AND expires_at > datetime('now')",
+    args: [cacheKey],
+  });
+  return result.rows[0] ? JSON.parse(result.rows[0].response_json) : null;
 }
 
-function setCache(cacheKey, data, ttlMinutes) {
-  db.prepare(
-    `INSERT OR REPLACE INTO ol_cache (cache_key, response_json, cached_at, expires_at) VALUES (?, ?, datetime('now'), datetime('now', '+' || ? || ' minutes'))`,
-  ).run(cacheKey, JSON.stringify(data), ttlMinutes);
+async function setCache(cacheKey, data, ttlMinutes) {
+  await db.execute({
+    sql: `INSERT OR REPLACE INTO ol_cache (cache_key, response_json, cached_at, expires_at) VALUES (?, ?, datetime('now'), datetime('now', '+' || ? || ' minutes'))`,
+    args: [cacheKey, JSON.stringify(data), ttlMinutes],
+  });
 }
 
 async function cachedFetch(cacheKey, url, ttlMinutes) {
-  const cached = getCached(cacheKey);
+  const cached = await getCached(cacheKey);
   if (cached) return cached;
   const response = await throttledFetch(url, config.OL_USER_AGENT);
   if (!response.ok) throw new Error(`Open Library API error: ${response.status}`);
   const data = await response.json();
-  setCache(cacheKey, data, ttlMinutes);
+  await setCache(cacheKey, data, ttlMinutes);
   return data;
 }
 
@@ -64,7 +66,7 @@ export async function getEditionByISBN(isbn) {
   return cachedFetch(`isbn:${clean}`, `https://openlibrary.org/isbn/${clean}.json`, TTL.edition);
 }
 
-export function cleanupCache() {
-  const result = db.prepare("DELETE FROM ol_cache WHERE expires_at < datetime('now')").run();
-  if (result.changes > 0) console.log(`Cleaned up ${result.changes} expired cache entries.`);
+export async function cleanupCache() {
+  const result = await db.execute("DELETE FROM ol_cache WHERE expires_at < datetime('now')");
+  if (result.rowsAffected > 0) console.log(`Cleaned up ${result.rowsAffected} expired cache entries.`);
 }
