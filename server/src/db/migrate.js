@@ -40,7 +40,7 @@ export async function migrate() {
     .map((s) => s.trim())
     .filter((s) => s.length > 0);
 
-  await db.batch(statements.map((sql) => ({ sql: sql + ";" })));
+  await db.batch(statements.map((sql) => ({ sql: sql + ";", args: [] })));
 
   // Apply column additions for existing databases
   await applyAlterMigrations();
