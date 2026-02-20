@@ -30,11 +30,15 @@ export async function migrate() {
   const schemaPath = path.join(__dirname, "schema.sql");
   const schema = fs.readFileSync(schemaPath, "utf-8");
 
-  // Split schema into individual statements and execute as a batch
-  const statements = schema
+  // Strip all SQL comments, then split into individual statements
+  const cleaned = schema
+    .replace(/--.*$/gm, "") // remove single-line comments
+    .replace(/\/\*[\s\S]*?\*\//g, ""); // remove multi-line comments
+
+  const statements = cleaned
     .split(";")
     .map((s) => s.trim())
-    .filter((s) => s.length > 0 && !s.startsWith("--"));
+    .filter((s) => s.length > 0);
 
   await db.batch(statements.map((sql) => ({ sql: sql + ";" })));
 
