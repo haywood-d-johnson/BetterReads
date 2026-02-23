@@ -13,7 +13,7 @@ const config = {
   JWT_SECRET: process.env.JWT_SECRET,
   ADMIN_USERNAME: process.env.ADMIN_USERNAME || "admin",
   ADMIN_PASSWORD: process.env.ADMIN_PASSWORD,
-  TURSO_URL: process.env.TURSO_URL || "file:./server/data/betterreads.db",
+  TURSO_URL: process.env.TURSO_URL || `file:${path.resolve(__dirname, "../data/betterreads.db")}`,
   TURSO_AUTH_TOKEN: process.env.TURSO_AUTH_TOKEN,
   OL_USER_AGENT: process.env.OL_USER_AGENT || "BetterReads/1.0 (personal book tracker)",
 };

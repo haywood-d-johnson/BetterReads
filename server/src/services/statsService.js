@@ -30,6 +30,12 @@ export async function getOverview(reader) {
     },
   ]);
 
+  // Fetch current year's goal separately (reader-aware query differs from batch)
+  const goalQuery = reader === "me" || reader === "kids"
+    ? { sql: "SELECT target_books FROM reading_goal WHERE year = CAST(strftime('%Y', 'now') AS INTEGER) AND reader = ?", args: [reader] }
+    : { sql: "SELECT target_books FROM reading_goal WHERE year = CAST(strftime('%Y', 'now') AS INTEGER) AND reader = 'me'", args: [] };
+  const goalResult = await db.execute(goalQuery);
+
   return {
     totalBooks: results[0].rows[0].count,
     totalFinished: results[1].rows[0].count,
@@ -37,6 +43,7 @@ export async function getOverview(reader) {
     avgRating: results[3].rows[0].avg || 0,
     finishedThisYear: results[4].rows[0].count,
     currentlyReading: results[5].rows[0].count,
+    yearlyGoal: goalResult.rows[0]?.target_books || null,
   };
 }
 
@@ -62,6 +69,25 @@ export async function getGenres(reader) {
     args: r.params,
   });
   return result.rows;
+}
+
+export async function getGoal(year, reader) {
+  const r = reader === "me" || reader === "kids" ? reader : "me";
+  const result = await db.execute({
+    sql: "SELECT year, target_books, reader FROM reading_goal WHERE year = ? AND reader = ?",
+    args: [Number(year), r],
+  });
+  return result.rows[0] || null;
+}
+
+export async function setGoal(year, targetBooks, reader) {
+  const r = reader === "me" || reader === "kids" ? reader : "me";
+  await db.execute({
+    sql: `INSERT INTO reading_goal (year, target_books, reader) VALUES (?, ?, ?)
+          ON CONFLICT(year, reader) DO UPDATE SET target_books = ?, updated_at = datetime('now')`,
+    args: [Number(year), Number(targetBooks), r, Number(targetBooks)],
+  });
+  return { year: Number(year), target_books: Number(targetBooks), reader: r };
 }
 
 export async function getRatings(reader) {
