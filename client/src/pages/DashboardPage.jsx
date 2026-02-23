@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { getBooks } from "../api/books.js";
-import { getOverview } from "../api/stats.js";
+import { getOverview, setGoal } from "../api/stats.js";
 import BookGrid from "../components/books/BookGrid.jsx";
 import ReadingProgressBar from "../components/books/ReadingProgressBar.jsx";
 import StatCard from "../components/stats/StatCard.jsx";
+import GoalProgress from "../components/stats/GoalProgress.jsx";
 import LoadingSpinner from "../components/shared/LoadingSpinner.jsx";
 import EmptyState from "../components/shared/EmptyState.jsx";
 import ReaderToggle from "../components/shared/ReaderToggle.jsx";
@@ -66,7 +67,14 @@ export default function DashboardPage() {
           <StatCard label="Books Read" value={stats.totalFinished} icon={"\u{1F4D6}"} />
           <StatCard label="Pages Read" value={stats.totalPages.toLocaleString()} icon={"\u{1F4C4}"} />
           <StatCard label="Avg Rating" value={stats.avgRating || "\u2014"} icon={"\u2B50"} />
-          <StatCard label="This Year" value={stats.finishedThisYear} icon={"\u{1F4C5}"} />
+          <GoalProgress
+            finished={stats.finishedThisYear}
+            target={stats.yearlyGoal}
+            onSetGoal={async (target) => {
+              await setGoal(new Date().getFullYear(), target, reader || "me");
+              setStats((s) => ({ ...s, yearlyGoal: target }));
+            }}
+          />
         </div>
       )}
 

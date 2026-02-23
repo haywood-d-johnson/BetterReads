@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
-import { getOverview, getByYear, getGenres, getRatings } from "../api/stats.js";
+import { getOverview, getByYear, getGenres, getRatings, setGoal } from "../api/stats.js";
 import StatCard from "../components/stats/StatCard.jsx";
+import GoalProgress from "../components/stats/GoalProgress.jsx";
 import YearlyChart from "../components/stats/YearlyChart.jsx";
 import GenreBreakdown from "../components/stats/GenreBreakdown.jsx";
 import RatingDistribution from "../components/stats/RatingDistribution.jsx";
@@ -68,7 +69,14 @@ export default function StatsPage() {
           <StatCard label="Books Read" value={overview.totalFinished} icon={"\u{1F4D6}"} />
           <StatCard label="Pages Read" value={(overview.totalPages || 0).toLocaleString()} icon={"\u{1F4C4}"} />
           <StatCard label="Avg Rating" value={overview.avgRating || "\u2014"} icon={"\u2B50"} />
-          <StatCard label="This Year" value={overview.finishedThisYear} icon={"\u{1F4C5}"} />
+          <GoalProgress
+            finished={overview.finishedThisYear}
+            target={overview.yearlyGoal}
+            onSetGoal={async (target) => {
+              await setGoal(new Date().getFullYear(), target, reader || "me");
+              setOverview((o) => ({ ...o, yearlyGoal: target }));
+            }}
+          />
           <StatCard label="Currently Reading" value={overview.currentlyReading} icon={"\u{1F4D6}"} />
         </div>
       )}
