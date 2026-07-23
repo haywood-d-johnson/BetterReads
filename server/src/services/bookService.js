@@ -40,7 +40,9 @@ export async function getBook(id) {
     sql: "SELECT b.*, s.name as shelf_name, s.slug as shelf_slug FROM book b JOIN shelf s ON b.shelf_id = s.id WHERE b.id = ?",
     args: [id],
   });
-  return result.rows[0] || null;
+  const book = result.rows[0] || null;
+  if (book) book.locations = await getBookLocations(id);
+  return book;
 }
 
 export async function getBookByWorkKey(olWorkKey) {
@@ -189,20 +191,53 @@ export async function updateReader(bookId, reader) {
   return getBook(bookId);
 }
 
-export async function updateLocation(bookId, locationName, locationLat, locationLng) {
-  await db.execute({
-    sql: "UPDATE book SET location_name = ?, location_lat = ?, location_lng = ?, updated_at = datetime('now') WHERE id = ?",
-    args: [locationName, locationLat, locationLng, bookId],
-  });
-  return getBook(bookId);
-}
-
-export async function removeLocation(bookId) {
-  await db.execute({
-    sql: "UPDATE book SET location_name = NULL, location_lat = NULL, location_lng = NULL, updated_at = datetime('now') WHERE id = ?",
+export async function getBookLocations(bookId) {
+  const result = await db.execute({
+    sql: "SELECT * FROM book_location WHERE book_id = ? ORDER BY created_at ASC, id ASC",
     args: [bookId],
   });
-  return getBook(bookId);
+  return result.rows;
+}
+
+export async function addBookLocation(bookId, { name, lat, lng, note }) {
+  const result = await db.execute({
+    sql: "INSERT INTO book_location (book_id, name, lat, lng, note) VALUES (?, ?, ?, ?, ?)",
+    args: [bookId, name, lat, lng, note || null],
+  });
+  const newId = Number(result.lastInsertRowid);
+  const row = await db.execute({ sql: "SELECT * FROM book_location WHERE id = ?", args: [newId] });
+  return row.rows[0];
+}
+
+export async function updateBookLocation(locationId, { name, lat, lng, note }) {
+  const sets = [];
+  const params = [];
+  if (name !== undefined) {
+    sets.push("name = ?");
+    params.push(name);
+  }
+  if (lat !== undefined) {
+    sets.push("lat = ?");
+    params.push(lat);
+  }
+  if (lng !== undefined) {
+    sets.push("lng = ?");
+    params.push(lng);
+  }
+  if (note !== undefined) {
+    sets.push("note = ?");
+    params.push(note || null);
+  }
+  if (sets.length > 0) {
+    params.push(locationId);
+    await db.execute({ sql: `UPDATE book_location SET ${sets.join(", ")} WHERE id = ?`, args: params });
+  }
+  const row = await db.execute({ sql: "SELECT * FROM book_location WHERE id = ?", args: [locationId] });
+  return row.rows[0] || null;
+}
+
+export async function deleteBookLocation(locationId) {
+  await db.execute({ sql: "DELETE FROM book_location WHERE id = ?", args: [locationId] });
 }
 
 export async function getProgressHistory(bookId) {

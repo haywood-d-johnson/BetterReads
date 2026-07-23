@@ -159,26 +159,55 @@ router.put("/:id/reader", authenticate, async (req, res) => {
   }
 });
 
-router.put("/:id/location", authenticate, async (req, res) => {
+router.get("/:id/locations", authenticate, async (req, res) => {
   try {
-    const { locationName, locationLat, locationLng } = req.body;
-    if (!locationName || locationLat == null || locationLng == null) {
-      return res.status(400).json({ error: "locationName, locationLat, and locationLng are required" });
+    res.json(await bookService.getBookLocations(Number(req.params.id)));
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to fetch locations" });
+  }
+});
+
+router.post("/:id/locations", authenticate, async (req, res) => {
+  try {
+    const { name, lat, lng, note } = req.body;
+    if (!name || lat == null || lng == null) {
+      return res.status(400).json({ error: "name, lat, and lng are required" });
     }
-    const book = await bookService.updateLocation(Number(req.params.id), locationName, Number(locationLat), Number(locationLng));
-    if (!book) return res.status(404).json({ error: "Book not found" });
-    res.json(book);
+    const location = await bookService.addBookLocation(Number(req.params.id), {
+      name,
+      lat: Number(lat),
+      lng: Number(lng),
+      note,
+    });
+    res.status(201).json(location);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to add location" });
+  }
+});
+
+router.patch("/:id/locations/:locId", authenticate, async (req, res) => {
+  try {
+    const { name, lat, lng, note } = req.body;
+    const location = await bookService.updateBookLocation(Number(req.params.locId), {
+      name,
+      lat: lat == null ? undefined : Number(lat),
+      lng: lng == null ? undefined : Number(lng),
+      note,
+    });
+    if (!location) return res.status(404).json({ error: "Location not found" });
+    res.json(location);
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Failed to update location" });
   }
 });
 
-router.delete("/:id/location", authenticate, async (req, res) => {
+router.delete("/:id/locations/:locId", authenticate, async (req, res) => {
   try {
-    const book = await bookService.removeLocation(Number(req.params.id));
-    if (!book) return res.status(404).json({ error: "Book not found" });
-    res.json(book);
+    await bookService.deleteBookLocation(Number(req.params.locId));
+    res.json({ success: true });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Failed to remove location" });

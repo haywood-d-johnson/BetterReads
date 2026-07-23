@@ -8,6 +8,10 @@ export async function getByYear(year, reader) {
   if (reader) q.set("reader", reader);
   return apiClient(`/api/stats/by-year?${q.toString()}`);
 }
+export async function getByWeek(reader) {
+  const q = reader ? `?reader=${reader}` : "";
+  return apiClient(`/api/stats/by-week${q}`);
+}
 export async function getGenres(reader) {
   const q = reader ? `?reader=${reader}` : "";
   return apiClient(`/api/stats/genres${q}`);

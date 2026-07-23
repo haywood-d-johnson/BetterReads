@@ -62,6 +62,27 @@ export async function getByYear(year, reader) {
   return months;
 }
 
+export async function getByWeek(reader) {
+  const r = readerClause(reader);
+  // Rolling window of the last 12 weeks (Monday-started). The recursive CTE
+  // generates every week in the window so weeks with no finishes come back as 0.
+  const result = await db.execute({
+    sql: `WITH RECURSIVE weeks(week_start) AS (
+            SELECT date('now', 'weekday 0', '-6 days', '-77 days')
+            UNION ALL
+            SELECT date(week_start, '+7 days') FROM weeks WHERE week_start < date('now', 'weekday 0', '-6 days')
+          )
+          SELECT w.week_start as weekStart,
+            (SELECT COUNT(*) FROM book
+             WHERE date_finished IS NOT NULL
+               AND date(date_finished, 'weekday 0', '-6 days') = w.week_start${r.sql}) as count
+          FROM weeks w
+          ORDER BY w.week_start`,
+    args: r.params,
+  });
+  return result.rows;
+}
+
 export async function getGenres(reader) {
   const r = readerClause(reader);
   const result = await db.execute({

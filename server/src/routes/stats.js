@@ -22,6 +22,15 @@ router.get("/by-year", authenticate, async (req, res) => {
   }
 });
 
+router.get("/by-week", authenticate, async (req, res) => {
+  try {
+    res.json(await statsService.getByWeek(req.query.reader));
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to fetch weekly stats" });
+  }
+});
+
 router.get("/genres", authenticate, async (req, res) => {
   try {
     res.json(await statsService.getGenres(req.query.reader));

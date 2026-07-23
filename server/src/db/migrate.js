@@ -48,7 +48,38 @@ export async function migrate() {
   // Rename "Abandoned" shelf to "Did Not Finish"
   await applyShelfRenames();
 
+  // Move legacy single-location data into the book_location table
+  await migrateLocationsToTable();
+
   console.log("Database migration complete.");
+}
+
+// One-time backfill: copy any book.location_* value into book_location, then
+// clear the old columns so it isn't re-migrated on the next run.
+async function migrateLocationsToTable() {
+  try {
+    const result = await db.execute(
+      "SELECT id, location_name, location_lat, location_lng FROM book WHERE location_name IS NOT NULL AND location_lat IS NOT NULL AND location_lng IS NOT NULL",
+    );
+    for (const row of result.rows) {
+      const existing = await db.execute({
+        sql: "SELECT COUNT(*) as c FROM book_location WHERE book_id = ?",
+        args: [row.id],
+      });
+      if (existing.rows[0].c === 0) {
+        await db.execute({
+          sql: "INSERT INTO book_location (book_id, name, lat, lng, note) VALUES (?, ?, ?, ?, NULL)",
+          args: [row.id, row.location_name, row.location_lat, row.location_lng],
+        });
+      }
+      await db.execute({
+        sql: "UPDATE book SET location_name = NULL, location_lat = NULL, location_lng = NULL WHERE id = ?",
+        args: [row.id],
+      });
+    }
+  } catch (err) {
+    console.error("Location backfill skipped:", err.message);
+  }
 }
 
 async function applyShelfRenames() {

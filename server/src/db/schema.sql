@@ -91,3 +91,15 @@ CREATE TABLE IF NOT EXISTS reading_goal (
     updated_at    TEXT NOT NULL DEFAULT (datetime('now')),
     UNIQUE(year, reader)
 );
+
+CREATE TABLE IF NOT EXISTS book_location (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    book_id     INTEGER NOT NULL,
+    name        TEXT NOT NULL,               -- "Chicago, IL, USA"
+    lat         REAL NOT NULL,               -- latitude
+    lng         REAL NOT NULL,               -- longitude
+    note        TEXT,                        -- freeform note about this pin
+    created_at  TEXT NOT NULL DEFAULT (datetime('now')),
+    FOREIGN KEY (book_id) REFERENCES book(id) ON DELETE CASCADE
+);
+-- Multiple pins per book, each with its own note. Replaces the single book.location_* columns.

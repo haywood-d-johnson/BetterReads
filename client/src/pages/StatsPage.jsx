@@ -1,33 +1,54 @@
 import { useState, useEffect } from "react";
-import { getOverview, getByYear, getGenres, getRatings, setGoal } from "../api/stats.js";
+import { getOverview, getByYear, getByWeek, getGenres, getRatings, setGoal } from "../api/stats.js";
 import StatCard from "../components/stats/StatCard.jsx";
 import GoalProgress from "../components/stats/GoalProgress.jsx";
 import YearlyChart from "../components/stats/YearlyChart.jsx";
+import WeeklyChart from "../components/stats/WeeklyChart.jsx";
 import GenreBreakdown from "../components/stats/GenreBreakdown.jsx";
 import RatingDistribution from "../components/stats/RatingDistribution.jsx";
 import LoadingSpinner from "../components/shared/LoadingSpinner.jsx";
 import ReaderToggle from "../components/shared/ReaderToggle.jsx";
 
+const GRANULARITY_KEY = "betterreads_stats_granularity";
+
+function getInitialGranularity() {
+  const stored = localStorage.getItem(GRANULARITY_KEY);
+  return stored === "week" || stored === "month" ? stored : "month";
+}
+
 export default function StatsPage() {
   const [overview, setOverview] = useState(null);
   const [yearly, setYearly] = useState([]);
+  const [weekly, setWeekly] = useState([]);
   const [genres, setGenres] = useState([]);
   const [ratings, setRatings] = useState([]);
   const [year, setYear] = useState(new Date().getFullYear());
+  const [granularity, setGranularity] = useState(getInitialGranularity);
   const [reader, setReader] = useState("");
   const [loading, setLoading] = useState(true);
 
+  useEffect(() => {
+    localStorage.setItem(GRANULARITY_KEY, granularity);
+  }, [granularity]);
+
   function fetchAll(r, y) {
-    return Promise.all([getOverview(r || undefined), getByYear(y, r || undefined), getGenres(r || undefined), getRatings(r || undefined)]);
+    return Promise.all([
+      getOverview(r || undefined),
+      getByYear(y, r || undefined),
+      getGenres(r || undefined),
+      getRatings(r || undefined),
+      getByWeek(r || undefined),
+    ]);
   }
 
   useEffect(() => {
     fetchAll(reader, year)
-      .then(([o, y, g, r]) => {
+      .then(([o, y, g, r, w]) => {
         setOverview(o);
         setYearly(y);
         setGenres(g);
         setRatings(r);
+        setWeekly(w);
       })
       .catch(console.error)
       .finally(() => setLoading(false));
@@ -35,11 +56,12 @@ export default function StatsPage() {
 
   useEffect(() => {
     fetchAll(reader, year)
-      .then(([o, y, g, r]) => {
+      .then(([o, y, g, r, w]) => {
         setOverview(o);
         setYearly(y);
         setGenres(g);
         setRatings(r);
+        setWeekly(w);
       })
       .catch(console.error);
   }, [year, reader]);
@@ -83,21 +105,37 @@ export default function StatsPage() {
 
       <div data-stats-charts style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24, marginBottom: 24 }}>
         <div>
-          <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 8 }}>
-            <select
-              className="form-input"
-              style={{ width: "auto", padding: "2px 8px" }}
-              value={year}
-              onChange={(e) => setYear(parseInt(e.target.value, 10))}
-            >
-              {years.map((y) => (
-                <option key={y} value={y}>
-                  {y}
-                </option>
-              ))}
-            </select>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8, gap: 8 }}>
+            <div style={{ display: "flex", gap: 4 }}>
+              <button
+                className={`btn btn-sm ${granularity === "month" ? "btn-primary" : "btn-outline"}`}
+                onClick={() => setGranularity("month")}
+              >
+                Monthly
+              </button>
+              <button
+                className={`btn btn-sm ${granularity === "week" ? "btn-primary" : "btn-outline"}`}
+                onClick={() => setGranularity("week")}
+              >
+                Weekly
+              </button>
+            </div>
+            {granularity === "month" && (
+              <select
+                className="form-input"
+                style={{ width: "auto", padding: "2px 8px" }}
+                value={year}
+                onChange={(e) => setYear(parseInt(e.target.value, 10))}
+              >
+                {years.map((y) => (
+                  <option key={y} value={y}>
+                    {y}
+                  </option>
+                ))}
+              </select>
+            )}
           </div>
-          <YearlyChart data={yearly} />
+          {granularity === "month" ? <YearlyChart data={yearly} /> : <WeeklyChart data={weekly} />}
         </div>
 
         <RatingDistribution data={ratings} />
