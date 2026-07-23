@@ -1,7 +1,10 @@
 import { useState } from "react";
-export default function BookCover({ coverId, title, size = "M", className = "", style = {} }) {
+export default function BookCover({ coverId, coverUrl, title, size = "M", className = "", style = {} }) {
   const [error, setError] = useState(false);
-  if (!coverId || error)
+  // Prefer an explicit full URL (non-OL sources like Google Books); otherwise
+  // build the Open Library cover URL from the numeric cover ID.
+  const src = coverUrl || (coverId ? `https://covers.openlibrary.org/b/id/${coverId}-${size}.jpg?default=false` : null);
+  if (!src || error)
     return (
       <div
         className={className}
@@ -34,7 +37,7 @@ export default function BookCover({ coverId, title, size = "M", className = "", 
     );
   return (
     <img
-      src={`https://covers.openlibrary.org/b/id/${coverId}-${size}.jpg?default=false`}
+      src={src}
       alt={`Cover of ${title}`}
       className={className}
       style={{

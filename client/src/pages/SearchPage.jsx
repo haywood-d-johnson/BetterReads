@@ -67,7 +67,7 @@ export default function SearchPage() {
       <h1 style={{ marginBottom: 24 }}>Search Books</h1>
       <SearchBar onChange={handleSearch} />
       {loading ? (
-        <LoadingSpinner text="Searching Open Library..." />
+        <LoadingSpinner text="Searching..." />
       ) : searched && results.length === 0 ? (
         <EmptyState
           icon={"\u{1F50D}"}

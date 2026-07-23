@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
-import { getBook, updateRating, updateReview, updateReader, moveBookToShelf, deleteBook, updateLocation, removeLocation } from "../api/books.js";
+import { getBook, updateRating, updateReview, updateReader, moveBookToShelf, deleteBook, addBookLocation, updateBookLocation, deleteBookLocation } from "../api/books.js";
 import { getShelves } from "../api/shelves.js";
 import BookCover from "../components/books/BookCover.jsx";
 import StarRating from "../components/reviews/StarRating.jsx";
@@ -20,17 +20,19 @@ export default function BookDetailPage() {
   const navigate = useNavigate();
   const [book, setBook] = useState(null);
   const [shelves, setShelves] = useState([]);
+  const [locations, setLocations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showReviewForm, setShowReviewForm] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showLocationPicker, setShowLocationPicker] = useState(false);
+  const [editingLocation, setEditingLocation] = useState(null);
 
   const fetchBook = useCallback(async () => {
     try {
       const [b, s] = await Promise.all([getBook(id), getShelves()]);
       setBook(b);
-      console.log(b);
+      setLocations(b.locations || []);
       setShelves(s);
       setError(null);
     } catch (err) {
@@ -96,30 +98,40 @@ export default function BookDetailPage() {
     }
   }
 
+  function openAddLocation() {
+    setEditingLocation(null);
+    setShowLocationPicker(true);
+  }
+
+  function openEditLocation(location) {
+    setEditingLocation(location);
+    setShowLocationPicker(true);
+  }
+
+  function closeLocationPicker() {
+    setShowLocationPicker(false);
+    setEditingLocation(null);
+  }
+
   async function handleLocationConfirm(location) {
     try {
-      await updateLocation(id, location.name, location.lat, location.lng);
-      setBook((prev) => ({
-        ...prev,
-        location_name: location.name,
-        location_lat: location.lat,
-        location_lng: location.lng,
-      }));
-      setShowLocationPicker(false);
+      if (editingLocation) {
+        const updated = await updateBookLocation(id, editingLocation.id, location);
+        setLocations((prev) => prev.map((l) => (l.id === updated.id ? updated : l)));
+      } else {
+        const created = await addBookLocation(id, location);
+        setLocations((prev) => [...prev, created]);
+      }
+      closeLocationPicker();
     } catch (err) {
       console.error(err);
     }
   }
 
-  async function handleLocationRemove() {
+  async function handleLocationRemove(locationId) {
     try {
-      await removeLocation(id);
-      setBook((prev) => ({
-        ...prev,
-        location_name: null,
-        location_lat: null,
-        location_lng: null,
-      }));
+      await deleteBookLocation(id, locationId);
+      setLocations((prev) => prev.filter((l) => l.id !== locationId));
     } catch (err) {
       console.error(err);
     }
@@ -149,7 +161,7 @@ export default function BookDetailPage() {
 
       <div data-book-detail-layout style={{ display: "grid", gridTemplateColumns: "200px 1fr", gap: 32, alignItems: "start" }}>
         <div>
-          <BookCover coverId={book.cover_id} title={book.title} size="L" style={{ width: "100%", borderRadius: 8 }} />
+          <BookCover coverId={book.cover_id} coverUrl={book.cover_url} title={book.title} size="L" style={{ width: "100%", borderRadius: 8 }} />
           <div style={{ marginTop: 16 }}>
             <label
               style={{
@@ -308,23 +320,19 @@ export default function BookDetailPage() {
           {/* Location section */}
           <div style={{ marginBottom: 24 }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-              <h3>Location</h3>
-              {!book.location_name && (
-                <button className="btn btn-outline btn-sm" onClick={() => setShowLocationPicker(true)}>
-                  Set Location
-                </button>
-              )}
+              <h3>Locations</h3>
+              <button className="btn btn-outline btn-sm" onClick={openAddLocation}>
+                Add Location
+              </button>
             </div>
-            {book.location_name && book.location_lat != null && book.location_lng != null ? (
+            {locations.length > 0 ? (
               <LocationDisplay
-                locationName={book.location_name}
-                lat={book.location_lat}
-                lng={book.location_lng}
-                onChangeClick={() => setShowLocationPicker(true)}
+                locations={locations}
+                onEditClick={openEditLocation}
                 onRemoveClick={handleLocationRemove}
               />
             ) : (
-              <p style={{ color: "var(--color-text-muted)", fontStyle: "italic" }}>No location set.</p>
+              <p style={{ color: "var(--color-text-muted)", fontStyle: "italic" }}>No locations set.</p>
             )}
           </div>
 
@@ -366,11 +374,16 @@ export default function BookDetailPage() {
       {showLocationPicker && (
         <LocationPicker
           isOpen={showLocationPicker}
-          onClose={() => setShowLocationPicker(false)}
+          onClose={closeLocationPicker}
           onConfirm={handleLocationConfirm}
           initialLocation={
-            book.location_name
-              ? { name: book.location_name, lat: book.location_lat, lng: book.location_lng }
+            editingLocation
+              ? {
+                  name: editingLocation.name,
+                  lat: editingLocation.lat,
+                  lng: editingLocation.lng,
+                  note: editingLocation.note,
+                }
               : null
           }
         />

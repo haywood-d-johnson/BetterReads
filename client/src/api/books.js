@@ -48,12 +48,18 @@ export async function getLibraryKeys() {
   return data.keys || [];
 }
 export const getLibraryWorkKeys = getLibraryKeys;
-export async function updateLocation(bookId, locationName, locationLat, locationLng) {
-  return apiClient(`/api/books/${bookId}/location`, {
-    method: "PUT",
-    body: JSON.stringify({ locationName, locationLat, locationLng }),
+export async function getBookLocations(bookId) {
+  return apiClient(`/api/books/${bookId}/locations`);
+}
+export async function addBookLocation(bookId, location) {
+  return apiClient(`/api/books/${bookId}/locations`, { method: "POST", body: JSON.stringify(location) });
+}
+export async function updateBookLocation(bookId, locationId, location) {
+  return apiClient(`/api/books/${bookId}/locations/${locationId}`, {
+    method: "PATCH",
+    body: JSON.stringify(location),
   });
 }
-export async function removeLocation(bookId) {
-  return apiClient(`/api/books/${bookId}/location`, { method: "DELETE" });
+export async function deleteBookLocation(bookId, locationId) {
+  return apiClient(`/api/books/${bookId}/locations/${locationId}`, { method: "DELETE" });
 }

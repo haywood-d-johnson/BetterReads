@@ -26,6 +26,7 @@ CREATE TABLE IF NOT EXISTS book (
     author_name     TEXT,                 -- display name: "Frank Herbert"
     ol_author_key   TEXT,                 -- "/authors/OL79034A" (for linking to author page)
     cover_id        INTEGER,             -- OL cover ID → build cover URL
+    cover_url       TEXT,                -- full cover URL (non-OL sources, e.g. Google Books)
     description     TEXT,                -- from Works API
     number_of_pages INTEGER,             -- from edition or search
     publish_date    TEXT,
@@ -81,3 +82,25 @@ CREATE TABLE IF NOT EXISTS ol_cache (
     expires_at    TEXT NOT NULL           -- cached_at + TTL
 );
 -- Caches raw API responses to stay under rate limits and make the app feel fast. TTLs: search = 1 hour, works/editions/authors = 7 days. Expired rows are cleaned up periodically.
+
+CREATE TABLE IF NOT EXISTS reading_goal (
+    id            INTEGER PRIMARY KEY AUTOINCREMENT,
+    year          INTEGER NOT NULL,
+    target_books  INTEGER NOT NULL DEFAULT 12,
+    reader        TEXT DEFAULT 'me',            -- supports per-reader goals
+    created_at    TEXT NOT NULL DEFAULT (datetime('now')),
+    updated_at    TEXT NOT NULL DEFAULT (datetime('now')),
+    UNIQUE(year, reader)
+);
+
+CREATE TABLE IF NOT EXISTS book_location (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    book_id     INTEGER NOT NULL,
+    name        TEXT NOT NULL,               -- "Chicago, IL, USA"
+    lat         REAL NOT NULL,               -- latitude
+    lng         REAL NOT NULL,               -- longitude
+    note        TEXT,                        -- freeform note about this pin
+    created_at  TEXT NOT NULL DEFAULT (datetime('now')),
+    FOREIGN KEY (book_id) REFERENCES book(id) ON DELETE CASCADE
+);
+-- Multiple pins per book, each with its own note. Replaces the single book.location_* columns.
