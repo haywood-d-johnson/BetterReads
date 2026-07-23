@@ -13,6 +13,33 @@ function getThemeColors() {
   };
 }
 
+// Custom tooltip so we can show pages read alongside the book count.
+function ChartTooltip({ active, payload, label, colors, labelPrefix = "" }) {
+  if (!active || !payload?.length) return null;
+  const row = payload[0].payload;
+  return (
+    <div
+      style={{
+        background: colors.tooltipBg,
+        color: colors.tooltipText,
+        border: `1px solid ${colors.grid}`,
+        borderRadius: 6,
+        padding: "8px 12px",
+        fontSize: 12,
+      }}
+    >
+      <div style={{ fontWeight: 600, marginBottom: 4 }}>
+        {labelPrefix}
+        {label}
+      </div>
+      <div>
+        {row.count} {row.count === 1 ? "book" : "books"}
+      </div>
+      <div>{(row.pages || 0).toLocaleString()} pages</div>
+    </div>
+  );
+}
+
 export default function YearlyChart({ data }) {
   const d = data.map((x) => ({ ...x, name: MONTHS[x.month - 1] }));
   const colors = getThemeColors();
@@ -24,7 +51,7 @@ export default function YearlyChart({ data }) {
           <CartesianGrid strokeDasharray="3 3" stroke={colors.grid} />
           <XAxis dataKey="name" tick={{ fontSize: 12, fill: colors.text }} />
           <YAxis allowDecimals={false} tick={{ fontSize: 12, fill: colors.text }} />
-          <Tooltip contentStyle={{ background: colors.tooltipBg, color: colors.tooltipText, border: `1px solid ${colors.grid}` }} />
+          <Tooltip content={<ChartTooltip colors={colors} />} />
           <Bar dataKey="count" fill={colors.bar} radius={[4, 4, 0, 0]} name="Books" />
         </BarChart>
       </ResponsiveContainer>

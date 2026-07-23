@@ -13,6 +13,33 @@ function getThemeColors() {
   };
 }
 
+// Custom tooltip so we can show pages read alongside the book count.
+function ChartTooltip({ active, payload, label, colors, labelPrefix = "" }) {
+  if (!active || !payload?.length) return null;
+  const row = payload[0].payload;
+  return (
+    <div
+      style={{
+        background: colors.tooltipBg,
+        color: colors.tooltipText,
+        border: `1px solid ${colors.grid}`,
+        borderRadius: 6,
+        padding: "8px 12px",
+        fontSize: 12,
+      }}
+    >
+      <div style={{ fontWeight: 600, marginBottom: 4 }}>
+        {labelPrefix}
+        {label}
+      </div>
+      <div>
+        {row.count} {row.count === 1 ? "book" : "books"}
+      </div>
+      <div>{(row.pages || 0).toLocaleString()} pages</div>
+    </div>
+  );
+}
+
 // weekStart is a plain "YYYY-MM-DD" string — parse the parts directly to avoid
 // timezone shifts from Date parsing.
 function weekLabel(weekStart) {
@@ -38,10 +65,7 @@ export default function WeeklyChart({ data }) {
             height={50}
           />
           <YAxis allowDecimals={false} tick={{ fontSize: 12, fill: colors.text }} />
-          <Tooltip
-            contentStyle={{ background: colors.tooltipBg, color: colors.tooltipText, border: `1px solid ${colors.grid}` }}
-            labelFormatter={(l) => `Week of ${l}`}
-          />
+          <Tooltip content={<ChartTooltip colors={colors} labelPrefix="Week of " />} />
           <Bar dataKey="count" fill={colors.bar} radius={[4, 4, 0, 0]} name="Books" />
         </BarChart>
       </ResponsiveContainer>

@@ -55,7 +55,7 @@ export async function getBookByWorkKey(olWorkKey) {
 
 export async function addBook(bookData) {
   const result = await db.execute({
-    sql: `INSERT INTO book (ol_work_key, ol_edition_key, title, subtitle, author_name, ol_author_key, cover_id, description, number_of_pages, publish_date, publisher, isbn_13, isbn_10, subjects, language, shelf_id, total_pages, reader) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    sql: `INSERT INTO book (ol_work_key, ol_edition_key, title, subtitle, author_name, ol_author_key, cover_id, cover_url, description, number_of_pages, publish_date, publisher, isbn_13, isbn_10, subjects, language, shelf_id, total_pages, reader) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     args: [
       bookData.ol_work_key || null,
       bookData.ol_edition_key || null,
@@ -64,6 +64,7 @@ export async function addBook(bookData) {
       bookData.author_name || null,
       bookData.ol_author_key || null,
       bookData.cover_id || null,
+      bookData.cover_url || null,
       bookData.description || null,
       bookData.number_of_pages || null,
       bookData.publish_date || null,

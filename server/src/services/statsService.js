@@ -50,14 +50,14 @@ export async function getOverview(reader) {
 export async function getByYear(year, reader) {
   const r = readerClause(reader);
   const result = await db.execute({
-    sql: `SELECT strftime('%m', date_finished) as month, COUNT(*) as count FROM book WHERE date_finished IS NOT NULL AND strftime('%Y', date_finished) = ?${r.sql} GROUP BY month ORDER BY month`,
+    sql: `SELECT strftime('%m', date_finished) as month, COUNT(*) as count, COALESCE(SUM(number_of_pages), 0) as pages FROM book WHERE date_finished IS NOT NULL AND strftime('%Y', date_finished) = ?${r.sql} GROUP BY month ORDER BY month`,
     args: [String(year), ...r.params],
   });
   const months = [];
   for (let m = 1; m <= 12; m++) {
     const ms = String(m).padStart(2, "0");
     const found = result.rows.find((row) => row.month === ms);
-    months.push({ month: m, count: found ? found.count : 0 });
+    months.push({ month: m, count: found ? found.count : 0, pages: found ? found.pages : 0 });
   }
   return months;
 }
@@ -75,10 +75,13 @@ export async function getByWeek(reader) {
           SELECT w.week_start as weekStart,
             (SELECT COUNT(*) FROM book
              WHERE date_finished IS NOT NULL
-               AND date(date_finished, 'weekday 0', '-6 days') = w.week_start${r.sql}) as count
+               AND date(date_finished, 'weekday 0', '-6 days') = w.week_start${r.sql}) as count,
+            (SELECT COALESCE(SUM(number_of_pages), 0) FROM book
+             WHERE date_finished IS NOT NULL
+               AND date(date_finished, 'weekday 0', '-6 days') = w.week_start${r.sql}) as pages
           FROM weeks w
           ORDER BY w.week_start`,
-    args: r.params,
+    args: [...r.params, ...r.params],
   });
   return result.rows;
 }

@@ -66,9 +66,11 @@ export default function OLBookDetailPage() {
     author_name: work.author_name,
     ol_author_key: work.ol_author_key,
     cover_id: work.cover_id,
+    cover_url: work.cover_url || null,
     subjects: work.subjects,
     description: work.description,
     publish_date: work.first_publish_date || null,
+    isbn_13: work.isbn_13 || null,
   };
 
   const authorKeyClean = work.ol_author_key?.replace("/authors/", "");
@@ -90,7 +92,7 @@ export default function OLBookDetailPage() {
 
       <div data-book-detail-layout style={{ display: "grid", gridTemplateColumns: "200px 1fr", gap: 32, alignItems: "start" }}>
         <div>
-          <BookCover coverId={work.cover_id} title={work.title} size="L" style={{ width: "100%", borderRadius: 8 }} />
+          <BookCover coverId={work.cover_id} coverUrl={work.cover_url} title={work.title} size="L" style={{ width: "100%", borderRadius: 8 }} />
           <div style={{ marginTop: 16 }}>
             <AddToLibraryButton bookData={bookData} shelves={shelves} inLibrary={false} onAdded={handleAdded} />
           </div>

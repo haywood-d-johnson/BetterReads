@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { authenticate } from "../middleware/auth.js";
 import * as bookService from "../services/bookService.js";
-import * as openLibrary from "../services/openLibrary.js";
+import * as catalog from "../services/catalog.js";
 
 const router = Router();
 
@@ -26,36 +26,10 @@ router.get("/library-keys", authenticate, async (req, res) => {
 
 router.get("/ol/:olWorkKey", authenticate, async (req, res) => {
   try {
-    const olWorkKey = `/works/${req.params.olWorkKey}`;
-    const localBook = await bookService.getBookByWorkKey(olWorkKey);
-    const work = await openLibrary.getWork(olWorkKey);
-    const description = typeof work.description === "string" ? work.description : work.description?.value || null;
-    const coverId = work.covers?.[0] || null;
-    const subjects = work.subjects?.slice(0, 15) || [];
-    const authorKeys = work.authors?.map((a) => a.author?.key) || [];
-    let authorName = null;
-    if (authorKeys[0]) {
-      try {
-        const author = await openLibrary.getAuthor(authorKeys[0]);
-        authorName = author.name || null;
-      } catch {}
-    }
-    res.json({
-      ol_work_key: olWorkKey,
-      title: work.title || "Unknown Title",
-      subtitle: work.subtitle || null,
-      author_name: authorName,
-      ol_author_key: authorKeys[0] || null,
-      cover_id: coverId,
-      description,
-      subjects,
-      first_publish_date: work.first_publish_date || null,
-      in_library: !!localBook,
-      local_book: localBook || null,
-    });
+    res.json(await catalog.getWorkDetail(req.params.olWorkKey));
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: "Failed to fetch Open Library work" });
+    res.status(500).json({ error: "Failed to fetch book details" });
   }
 });
 

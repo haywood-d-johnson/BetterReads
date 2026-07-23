@@ -17,7 +17,7 @@ export default function BookListItem({ book }) {
       }}
     >
       <div style={{ width: 40, height: 60, flexShrink: 0 }}>
-        <BookCover coverId={book.cover_id} title={book.title} size="S" />
+        <BookCover coverId={book.cover_id} coverUrl={book.cover_url} title={book.title} size="S" />
       </div>
       <div style={{ flex: 1, minWidth: 0 }}>
         <h4

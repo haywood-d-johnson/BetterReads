@@ -12,6 +12,7 @@ async function applyAlterMigrations() {
     "ALTER TABLE book ADD COLUMN location_lat REAL",
     "ALTER TABLE book ADD COLUMN location_lng REAL",
     "ALTER TABLE book ADD COLUMN reader TEXT DEFAULT 'me'",
+    "ALTER TABLE book ADD COLUMN cover_url TEXT",
   ];
 
   for (const sql of alterStatements) {

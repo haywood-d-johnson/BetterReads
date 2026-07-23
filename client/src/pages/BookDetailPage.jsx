@@ -161,7 +161,7 @@ export default function BookDetailPage() {
 
       <div data-book-detail-layout style={{ display: "grid", gridTemplateColumns: "200px 1fr", gap: 32, alignItems: "start" }}>
         <div>
-          <BookCover coverId={book.cover_id} title={book.title} size="L" style={{ width: "100%", borderRadius: 8 }} />
+          <BookCover coverId={book.cover_id} coverUrl={book.cover_url} title={book.title} size="L" style={{ width: "100%", borderRadius: 8 }} />
           <div style={{ marginTop: 16 }}>
             <label
               style={{

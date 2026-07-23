@@ -26,6 +26,7 @@ CREATE TABLE IF NOT EXISTS book (
     author_name     TEXT,                 -- display name: "Frank Herbert"
     ol_author_key   TEXT,                 -- "/authors/OL79034A" (for linking to author page)
     cover_id        INTEGER,             -- OL cover ID → build cover URL
+    cover_url       TEXT,                -- full cover URL (non-OL sources, e.g. Google Books)
     description     TEXT,                -- from Works API
     number_of_pages INTEGER,             -- from edition or search
     publish_date    TEXT,

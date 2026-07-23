@@ -16,6 +16,7 @@ const config = {
   TURSO_URL: process.env.TURSO_URL || `file:${path.resolve(__dirname, "../data/betterreads.db")}`,
   TURSO_AUTH_TOKEN: process.env.TURSO_AUTH_TOKEN,
   OL_USER_AGENT: process.env.OL_USER_AGENT || "BetterReads/1.0 (personal book tracker)",
+  GOOGLE_BOOKS_API_KEY: process.env.GOOGLE_BOOKS_API_KEY || null,
 };
 
 // Validate required env vars
