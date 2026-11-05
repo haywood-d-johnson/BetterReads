@@ -2,8 +2,8 @@
 
 A React Native (Expo) client for BetterReads. It talks to the same Express API as the web
 client (`server/`) — no backend changes required. This first version covers the **MVP**:
-sign in, search Open Library, manage your library and shelves, and track reading progress,
-ratings, and reviews.
+sign in, search Open Library, **scan ISBN barcodes** to add books, manage your library and
+shelves, and track reading progress, ratings, and reviews.
 
 > 📱 **Running it, especially over mobile data?** See **[RUNNING.md](RUNNING.md)** — a complete
 > runbook with the full mobile-data flow, Expo auth, and a troubleshooting table keyed by the
@@ -108,5 +108,8 @@ web). A 401 from any request clears the session and returns you to the login scr
 ## Not yet ported (planned next)
 
 Stats charts (recharts → `react-native-gifted-charts`), book-location maps (leaflet →
-`react-native-maps`), ISBN barcode scanning (html5-qrcode → `expo-camera`), author pages,
-reader (me/partner) toggle, and dark mode.
+`react-native-maps`), author pages, reader (me/partner) toggle, and dark mode.
+
+**Shipped since MVP:** ISBN barcode scanning (`expo-camera`) — tap the barcode button on the
+Search tab to scan a book's EAN-13/UPC and look it up. Camera works in Expo Go (no dev build
+needed); the permission prompt text lives in `app.json` under the `expo-camera` plugin.

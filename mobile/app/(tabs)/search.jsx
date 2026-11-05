@@ -1,15 +1,17 @@
 // Search tab: debounced Open Library search with add-to-library.
 import { useState, useEffect, useCallback } from "react";
-import { View, Text, FlatList, StyleSheet } from "react-native";
+import { View, Text, FlatList, Pressable, StyleSheet } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import { searchBooks } from "../../src/api/search.js";
 import { getLibraryWorkKeys } from "../../src/api/books.js";
 import { getShelves } from "../../src/api/shelves.js";
 import { useDebounce } from "../../src/hooks/useDebounce.js";
 import SearchBar from "../../src/components/SearchBar.jsx";
 import SearchResultRow from "../../src/components/SearchResultRow.jsx";
+import BarcodeScanner from "../../src/components/BarcodeScanner.jsx";
 import LoadingSpinner from "../../src/components/LoadingSpinner.jsx";
 import EmptyState from "../../src/components/EmptyState.jsx";
-import { colors, spacing, fontSize } from "../../src/theme.js";
+import { colors, spacing, radius, fontSize } from "../../src/theme.js";
 
 export default function SearchScreen() {
   const [query, setQuery] = useState("");
@@ -20,6 +22,7 @@ export default function SearchScreen() {
   const [searched, setSearched] = useState(false);
   const [libraryKeys, setLibraryKeys] = useState(new Set());
   const [shelves, setShelves] = useState([]);
+  const [scannerVisible, setScannerVisible] = useState(false);
 
   useEffect(() => {
     getLibraryWorkKeys().then((keys) => setLibraryKeys(new Set(keys))).catch(() => {});
@@ -53,10 +56,27 @@ export default function SearchScreen() {
     setLibraryKeys((prev) => new Set([...prev, workKey]));
   }
 
+  function handleScanned(isbn) {
+    setScannerVisible(false);
+    setQuery(isbn);
+    runSearch(isbn);
+  }
+
   return (
     <View style={styles.screen}>
       <View style={styles.searchWrap}>
-        <SearchBar value={query} onChangeText={setQuery} onSubmit={() => runSearch(query)} />
+        <View style={styles.searchRow}>
+          <View style={{ flex: 1 }}>
+            <SearchBar value={query} onChangeText={setQuery} onSubmit={() => runSearch(query)} />
+          </View>
+          <Pressable
+            style={styles.scanBtn}
+            onPress={() => setScannerVisible(true)}
+            accessibilityLabel="Scan ISBN barcode"
+          >
+            <Ionicons name="barcode-outline" size={24} color="#fff" />
+          </Pressable>
+        </View>
       </View>
 
       {loading ? (
@@ -91,6 +111,12 @@ export default function SearchScreen() {
           }
         />
       )}
+
+      <BarcodeScanner
+        visible={scannerVisible}
+        onClose={() => setScannerVisible(false)}
+        onScan={handleScanned}
+      />
     </View>
   );
 }
@@ -98,6 +124,15 @@ export default function SearchScreen() {
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.bg },
   searchWrap: { padding: spacing.md, paddingBottom: spacing.sm },
+  searchRow: { flexDirection: "row", alignItems: "center", gap: spacing.sm },
+  scanBtn: {
+    width: 46,
+    height: 46,
+    borderRadius: radius.md,
+    backgroundColor: colors.primary,
+    alignItems: "center",
+    justifyContent: "center",
+  },
   list: { padding: spacing.md, paddingTop: 0, gap: spacing.sm },
   count: { fontSize: fontSize.sm, color: colors.textMuted, marginBottom: spacing.sm },
 });
