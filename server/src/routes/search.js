@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { authenticate } from "../middleware/auth.js";
 import * as openLibrary from "../services/openLibrary.js";
+import * as catalog from "../services/catalog.js";
 
 const router = Router();
 
@@ -8,7 +9,7 @@ router.get("/", authenticate, async (req, res) => {
   try {
     const { q, page = 1, limit = 20 } = req.query;
     if (!q) return res.status(400).json({ error: "Query parameter q is required" });
-    const data = await openLibrary.searchBooks(q, Number(page), Number(limit));
+    const data = await catalog.search(q, Number(page), Number(limit));
     res.json(data);
   } catch (err) {
     console.error("Search error:", err);

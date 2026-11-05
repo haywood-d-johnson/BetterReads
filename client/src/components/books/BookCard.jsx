@@ -18,7 +18,7 @@ export default function BookCard({ book }) {
       }}
     >
       <div style={{ width: "100%", aspectRatio: "2/3", overflow: "hidden" }}>
-        <BookCover coverId={book.cover_id} title={book.title} size="M" />
+        <BookCover coverId={book.cover_id} coverUrl={book.cover_url} title={book.title} size="M" />
       </div>
       <div style={{ padding: "8px 12px 12px", display: "flex", flexDirection: "column", gap: 4 }}>
         <h4

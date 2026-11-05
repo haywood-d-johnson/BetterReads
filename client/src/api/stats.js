@@ -8,6 +8,10 @@ export async function getByYear(year, reader) {
   if (reader) q.set("reader", reader);
   return apiClient(`/api/stats/by-year?${q.toString()}`);
 }
+export async function getByWeek(reader) {
+  const q = reader ? `?reader=${reader}` : "";
+  return apiClient(`/api/stats/by-week${q}`);
+}
 export async function getGenres(reader) {
   const q = reader ? `?reader=${reader}` : "";
   return apiClient(`/api/stats/genres${q}`);
@@ -15,4 +19,15 @@ export async function getGenres(reader) {
 export async function getRatings(reader) {
   const q = reader ? `?reader=${reader}` : "";
   return apiClient(`/api/stats/ratings${q}`);
+}
+export async function getGoal(year, reader) {
+  const q = new URLSearchParams({ year });
+  if (reader) q.set("reader", reader);
+  return apiClient(`/api/stats/goal?${q.toString()}`);
+}
+export async function setGoal(year, targetBooks, reader) {
+  return apiClient("/api/stats/goal", {
+    method: "PUT",
+    body: JSON.stringify({ year, targetBooks, reader: reader || "me" }),
+  });
 }

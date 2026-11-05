@@ -53,7 +53,9 @@ export default function LocationPicker({ isOpen, onClose, onConfirm, initialLoca
     initialLocation ? [initialLocation.lat, initialLocation.lng] : null,
   );
   const [selectedName, setSelectedName] = useState(initialLocation ? initialLocation.name : "");
+  const [note, setNote] = useState(initialLocation ? initialLocation.note || "" : "");
 
+  const isEditing = !!initialLocation;
   const debouncedQuery = useDebounce(searchQuery, 600);
 
   // Reset state when modal opens
@@ -63,6 +65,7 @@ export default function LocationPicker({ isOpen, onClose, onConfirm, initialLoca
       setSearchResults([]);
       setSelectedPosition(initialLocation ? [initialLocation.lat, initialLocation.lng] : null);
       setSelectedName(initialLocation ? initialLocation.name : "");
+      setNote(initialLocation ? initialLocation.note || "" : "");
     }
   }, [isOpen, initialLocation]);
 
@@ -113,6 +116,7 @@ export default function LocationPicker({ isOpen, onClose, onConfirm, initialLoca
         name: selectedName,
         lat: selectedPosition[0],
         lng: selectedPosition[1],
+        note: note.trim(),
       });
     }
   }
@@ -154,7 +158,7 @@ export default function LocationPicker({ isOpen, onClose, onConfirm, initialLoca
           boxShadow: "var(--shadow-lg)",
         }}
       >
-        <h3 style={{ marginBottom: 16 }}>Set Book Location</h3>
+        <h3 style={{ marginBottom: 16 }}>{isEditing ? "Edit Location" : "Add Location"}</h3>
 
         {/* Search input */}
         <div style={{ position: "relative", marginBottom: 16 }}>
@@ -260,13 +264,35 @@ export default function LocationPicker({ isOpen, onClose, onConfirm, initialLoca
           </p>
         )}
 
+        {/* Per-pin note */}
+        <div style={{ marginBottom: 16 }}>
+          <label
+            style={{
+              display: "block",
+              fontSize: "var(--font-size-sm)",
+              color: "var(--color-text-muted)",
+              marginBottom: 4,
+            }}
+          >
+            Note (optional)
+          </label>
+          <textarea
+            className="form-input"
+            placeholder="Why this place? e.g. where chapter 3 is set..."
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+            rows={3}
+            style={{ width: "100%", resize: "vertical" }}
+          />
+        </div>
+
         {/* Action buttons */}
         <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
           <button className="btn btn-outline" onClick={onClose}>
             Cancel
           </button>
           <button className="btn btn-primary" onClick={handleConfirm} disabled={!selectedPosition || !selectedName}>
-            Confirm Location
+            {isEditing ? "Save Location" : "Add Location"}
           </button>
         </div>
       </div>

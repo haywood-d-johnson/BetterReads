@@ -12,6 +12,7 @@ export default function SearchResultCard({ result, shelves, libraryKeys, onAdded
     author_name: result.author_name?.[0] || null,
     ol_author_key: result.author_key?.[0] ? `/authors/${result.author_key[0]}` : null,
     cover_id: result.cover_i || null,
+    cover_url: result.cover_url || null,
     number_of_pages: result.number_of_pages_median || null,
     publish_date: result.first_publish_year ? String(result.first_publish_year) : null,
     subjects: result.subject?.slice(0, 10) || null,
@@ -46,7 +47,7 @@ export default function SearchResultCard({ result, shelves, libraryKeys, onAdded
       onMouseLeave={(e) => (e.currentTarget.style.boxShadow = "var(--shadow-sm)")}
     >
       <div style={{ width: 100, height: 150, flexShrink: 0 }}>
-        <BookCover coverId={result.cover_i} title={result.title} size="M" />
+        <BookCover coverId={result.cover_i} coverUrl={result.cover_url} title={result.title} size="M" />
       </div>
       <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 4 }}>
         <h3 style={{ fontSize: "var(--font-size-lg)", lineHeight: 1.3 }}>{result.title}</h3>
